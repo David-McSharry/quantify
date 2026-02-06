@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantify</title>
+  <link rel="stylesheet" href="sidepanel.css">
+</head>
+<body>
+  <main>
+    <div id="state-idle" class="state">
+      <div class="empty-state">
+        <p>Click the extension icon on any page to find related prediction markets.</p>
+      </div>
+    </div>
+
+    <div id="state-loading" class="state hidden">
+      <div class="loading">
+        <div class="spinner"></div>
+        <p>Fetching...</p>
+        <p class="url-display" id="loading-url"></p>
+      </div>
+    </div>
+
+    <div id="state-results" class="state hidden">
+      <p class="url-display" id="results-url"></p>
+      <div id="response-text"></div>
+    </div>
+
+    <div id="state-error" class="state hidden">
+      <div class="error-box">
+        <p class="error-title">Something went wrong</p>
+        <p class="error-message" id="error-message"></p>
+        <button id="retry-btn">Retry</button>
+      </div>
+    </div>
+  </main>
+
+  <script src="sidepanel.js" type="module"></script>
+</body>
+</html>
