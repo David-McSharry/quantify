@@ -113,8 +113,11 @@ async def run_agent(url: str = None, text: str = None, source: str = None) -> st
 
 async def run_rewrite(analysis: str, tweet_text: str) -> str:
     prompt = (
-        "Rewrite this prediction market analysis into a single tweet (max 280 characters). "
-        "Include the most interesting market probability. Be punchy and informative. "
+        "Condense this prediction market analysis into a single tweet (max 280 characters). "
+        "ONLY state facts: market names and their probabilities. No opinions, no analysis, "
+        "no editorializing, no connecting dots. Just pure context like: "
+        "'X: 36% on Manifold. Y: 48% on Polymarket.' "
+        "End with ' - by Quantify'. "
         "Do not use hashtags. Do not use emojis. Just output the tweet text, nothing else.\n\n"
     )
     if tweet_text:
