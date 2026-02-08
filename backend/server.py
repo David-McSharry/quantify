@@ -24,31 +24,51 @@ CORS(app)
 MCP_SERVER_DIR = str(Path(__file__).resolve().parent.parent / "mcp-predictive-market")
 
 
-async def run_agent(url: str) -> str:
+async def run_agent(url: str = None, text: str = None, source: str = None) -> str:
     today = date.today().isoformat()
-    prompt = (
-        f"Today's date: {today}\n\n"
-        f"Use the fetch tool to retrieve this article: {url}\n\n"
-        "Search for prediction markets related to claims and predictions made in this article. "
-        "Then give the user a brief of what prediction markets say about those claims.\n\n"
-        "Structure: group by topic. For each topic, start with a short bold heading, then "
-        "a line of article context using short verbatim quotes from the article in italics "
-        "(copied word-for-word, not paraphrased). "
-        "Below that, list the relevant markets — hyperlink market names to their URLs, "
-        "mention the platform and current probability, and add a short dash of explanation "
-        "or context where the connection isn't obvious. "
-        "Separate each topic group with a blank line. "
-        "Only include markets that directly address a specific claim or prediction in the article — "
-        "if you have to stretch to explain the connection, leave it out. "
-        "Line breaks are your friend — keep it easy to scan.\n\n"
-        "CRITICAL: Your final response must start immediately with market content. "
-        "Never narrate what you did or what you searched for. Never say things like "
-        "'I found...', 'The searches...', 'Unfortunately...', 'I wasn't able to...', "
-        "'Here's what's available...', 'But I didn't find...'. "
-        "No meta-commentary about the search process at all. "
-        "Never mention markets you didn't find or topics with no results — just omit them silently. "
-        "Only show markets that exist. If none found at all, say 'No relevant markets found.' and stop."
-    )
+
+    if text and source == 'twitter':
+        # Twitter tweet analysis - direct text, no fetch needed
+        prompt = (
+            f"Today's date: {today}\n\n"
+            f"Analyze this tweet:\n\n{text}\n\n"
+            "If the tweet includes image URLs, use the fetch tool to view them for additional context.\n\n"
+            "Search for prediction markets related to the topics, people, events, or claims "
+            "mentioned or implied in this tweet. Be loose and creative with connections — "
+            "if the tweet mentions a person, search for markets about them. If it mentions "
+            "a topic, find interesting markets in that space. Add whatever is interesting!\n\n"
+            "Format: For each relevant market, show **bold market name** as a hyperlink to its URL, "
+            "the platform and current probability, and a short explanation. "
+            "Keep it concise — this will display in a small box on Twitter.\n\n"
+            "CRITICAL: Start immediately with market content. "
+            "No meta-commentary, no 'I found...', no narration. "
+            "If no relevant markets found, say 'No relevant markets found.' and stop."
+        )
+    else:
+        # Article analysis - fetch URL first
+        prompt = (
+            f"Today's date: {today}\n\n"
+            f"Use the fetch tool to retrieve this article: {url}\n\n"
+            "Search for prediction markets related to claims and predictions made in this article. "
+            "Then give the user a brief of what prediction markets say about those claims.\n\n"
+            "Structure: group by topic. For each topic, start with a short bold heading, then "
+            "a line of article context using short verbatim quotes from the article in italics "
+            "(copied word-for-word, not paraphrased). "
+            "Below that, list the relevant markets — hyperlink market names to their URLs, "
+            "mention the platform and current probability, and add a short dash of explanation "
+            "or context where the connection isn't obvious. "
+            "Separate each topic group with a blank line. "
+            "Only include markets that directly address a specific claim or prediction in the article — "
+            "if you have to stretch to explain the connection, leave it out. "
+            "Line breaks are your friend — keep it easy to scan.\n\n"
+            "CRITICAL: Your final response must start immediately with market content. "
+            "Never narrate what you did or what you searched for. Never say things like "
+            "'I found...', 'The searches...', 'Unfortunately...', 'I wasn't able to...', "
+            "'Here's what's available...', 'But I didn't find...'. "
+            "No meta-commentary about the search process at all. "
+            "Never mention markets you didn't find or topics with no results — just omit them silently. "
+            "Only show markets that exist. If none found at all, say 'No relevant markets found.' and stop."
+        )
 
     options = ClaudeAgentOptions(
         allowed_tools=["mcp__fetch__*", "mcp__prediction-market__*"],
@@ -91,24 +111,81 @@ async def run_agent(url: str) -> str:
     return "\n".join(last_text_parts)
 
 
+async def run_rewrite(analysis: str, tweet_text: str) -> str:
+    prompt = (
+        "Rewrite this prediction market analysis into a single tweet (max 280 characters). "
+        "Include the most interesting market probability. Be punchy and informative. "
+        "Do not use hashtags. Do not use emojis. Just output the tweet text, nothing else.\n\n"
+    )
+    if tweet_text:
+        prompt += f"Original tweet being replied to:\n{tweet_text}\n\n"
+    prompt += f"Analysis to condense:\n{analysis}"
+
+    options = ClaudeAgentOptions(
+        allowed_tools=[],
+        permission_mode="bypassPermissions",
+        max_turns=1,
+    )
+
+    last_text = ""
+    async for message in query(prompt=prompt, options=options):
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if isinstance(block, TextBlock):
+                    last_text = block.text
+
+    return last_text.strip()
+
+
 @app.post("/analyze")
 def analyze():
     data = request.get_json()
-    if not data or "url" not in data:
-        return jsonify(ok=False, error="missing url"), 400
+    if not data:
+        return jsonify(ok=False, error="missing request body"), 400
 
-    url = data["url"]
-    print(f"\n[backend] === analyzing: {url}")
+    url = data.get("url")
+    text = data.get("text")
+    source = data.get("source")
+
+    if not url and not text:
+        return jsonify(ok=False, error="missing url or text"), 400
+
+    if text:
+        print(f"\n[backend] === analyzing tweet: {text[:80]}...")
+    else:
+        print(f"\n[backend] === analyzing: {url}")
     t_start = time.time()
 
     try:
-        result = asyncio.run(run_agent(url))
+        result = asyncio.run(run_agent(url=url, text=text, source=source))
         elapsed = time.time() - t_start
-        print(f"[backend] === done in {elapsed:.1f}s: {url}")
+        print(f"[backend] === done in {elapsed:.1f}s")
         return jsonify(ok=True, data=result)
     except Exception as e:
         elapsed = time.time() - t_start
         print(f"[backend] === error after {elapsed:.1f}s: {e}")
+        return jsonify(ok=False, error=str(e)), 502
+
+
+@app.post("/rewrite-tweet")
+def rewrite_tweet():
+    data = request.get_json()
+    if not data or "analysis" not in data:
+        return jsonify(ok=False, error="missing analysis"), 400
+
+    analysis = data["analysis"]
+    tweet_text = data.get("tweet_text", "")
+    print(f"\n[backend] === rewriting to tweet...")
+
+    t_start = time.time()
+    try:
+        result = asyncio.run(run_rewrite(analysis, tweet_text))
+        elapsed = time.time() - t_start
+        print(f"[backend] === rewrite done in {elapsed:.1f}s")
+        return jsonify(ok=True, data=result)
+    except Exception as e:
+        elapsed = time.time() - t_start
+        print(f"[backend] === rewrite error after {elapsed:.1f}s: {e}")
         return jsonify(ok=False, error=str(e)), 502
 
 

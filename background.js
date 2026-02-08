@@ -1,6 +1,6 @@
 import { testConnection } from './lib/gateway.js';
 
-chrome.action.onClicked.addListener(async (tab) => {
+async function analyzeCurrentTab(tab) {
   if (!tab?.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) return;
 
   // Must open panel synchronously (before any await) to stay in user gesture context
@@ -9,6 +9,15 @@ chrome.action.onClicked.addListener(async (tab) => {
 
   // Also send a message in case the panel is already open
   chrome.runtime.sendMessage({ type: 'analyze', url: tab.url }).catch(() => {});
+}
+
+chrome.action.onClicked.addListener(analyzeCurrentTab);
+
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command === 'analyze-page') {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    analyzeCurrentTab(tab);
+  }
 });
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {

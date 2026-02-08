@@ -32,3 +32,19 @@ htmlcov/
 
 # Debug files
 debug-*.html
+
+# Dev-only test script
+test-extension.mjs
+
+# Node
+node_modules/
+package-lock.json
+
+# Plans
+product_plan.md
+
+# Dev-only package.json (puppeteer test deps)
+package.json
+
+# Claude Code project context
+CLAUDE.md

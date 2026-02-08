@@ -1,0 +1,193 @@
+/* Quantify button in tweet action bar */
+.quantify-button-container {
+  display: flex;
+  align-items: center;
+  margin-left: 4px;
+}
+
+.quantify-tweet-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.quantify-tweet-button:hover {
+  background-color: rgba(29, 155, 240, 0.1);
+}
+
+.quantify-tweet-button:hover .quantify-icon {
+  color: rgb(29, 155, 240);
+}
+
+.quantify-icon {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: rgb(113, 118, 123);
+  transition: color 0.2s;
+}
+
+/* Loading state */
+.quantify-tweet-button.quantify-loading .quantify-icon {
+  animation: quantify-pulse 1s ease-in-out infinite;
+}
+
+@keyframes quantify-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Community note box */
+.quantify-note-box {
+  margin: 12px 0;
+  padding: 12px 16px;
+  background-color: rgb(247, 249, 249);
+  border: 1px solid rgb(207, 217, 222);
+  border-radius: 16px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 15px;
+  line-height: 1.4;
+  color: rgb(15, 20, 25);
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .quantify-note-box {
+    background-color: rgb(32, 35, 39);
+    border-color: rgb(56, 68, 77);
+    color: rgb(231, 233, 234);
+  }
+}
+
+/* Twitter's dark mode class detection */
+[data-color-mode="dark"] .quantify-note-box,
+[style*="background-color: rgb(0, 0, 0)"] .quantify-note-box {
+  background-color: rgb(32, 35, 39);
+  border-color: rgb(56, 68, 77);
+  color: rgb(231, 233, 234);
+}
+
+.quantify-note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.quantify-note-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: rgb(83, 100, 113);
+}
+
+@media (prefers-color-scheme: dark) {
+  .quantify-note-title {
+    color: rgb(139, 152, 165);
+  }
+}
+
+.quantify-note-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: rgb(83, 100, 113);
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+}
+
+.quantify-note-close:hover {
+  color: rgb(15, 20, 25);
+}
+
+@media (prefers-color-scheme: dark) {
+  .quantify-note-close:hover {
+    color: rgb(231, 233, 234);
+  }
+}
+
+.quantify-note-body {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.quantify-note-body a {
+  color: rgb(29, 155, 240);
+  text-decoration: none;
+}
+
+.quantify-note-body a:hover {
+  text-decoration: underline;
+}
+
+.quantify-note-body strong {
+  font-weight: 700;
+}
+
+.quantify-note-body em {
+  font-style: italic;
+}
+
+/* Footer with Draft Tweet button */
+.quantify-note-footer {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid rgb(207, 217, 222);
+  display: flex;
+  justify-content: flex-end;
+}
+
+@media (prefers-color-scheme: dark) {
+  .quantify-note-footer {
+    border-top-color: rgb(56, 68, 77);
+  }
+}
+
+.quantify-draft-tweet-button {
+  background: rgb(29, 155, 240);
+  color: white;
+  border: none;
+  border-radius: 9999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.quantify-draft-tweet-button:hover {
+  background: rgb(26, 140, 216);
+}
+
+.quantify-draft-tweet-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Error state */
+.quantify-note-box.quantify-note-error {
+  background-color: rgb(254, 242, 242);
+  border-color: rgb(248, 113, 113);
+}
+
+.quantify-note-box.quantify-note-error .quantify-note-title {
+  color: rgb(185, 28, 28);
+}
+
+@media (prefers-color-scheme: dark) {
+  .quantify-note-box.quantify-note-error {
+    background-color: rgb(69, 26, 26);
+    border-color: rgb(185, 28, 28);
+  }
+
+  .quantify-note-box.quantify-note-error .quantify-note-title {
+    color: rgb(248, 113, 113);
+  }
+}
