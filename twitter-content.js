@@ -7,7 +7,6 @@
   if (window.__quantifyTwitterLoaded) return;
   window.__quantifyTwitterLoaded = true;
 
-  const API_URL = 'http://127.0.0.1:18800';
   const PROCESSED_ATTR = 'data-quantify-processed';
 
   /** Cache of results by tweet text hash */
@@ -143,31 +142,32 @@
     button.classList.add('quantify-loading');
     button.disabled = true;
 
-    console.log('[quantify] Sending to backend...');
+    console.log('[quantify] Sending to extension agent...');
     try {
-      const body = JSON.stringify({ text: tweetText, source: 'twitter' });
-      console.log('[quantify] Request body:', body);
-
-      const response = await fetch(`${API_URL}/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body,
+      if (!chrome.runtime?.id) {
+        throw new Error('Extension was updated. Please refresh the page.');
+      }
+      const response = await chrome.runtime.sendMessage({
+        type: 'analyze-tweet',
+        text: tweetText,
       });
 
-      const data = await response.json();
-      console.log('[quantify] Response:', response.status, data.ok, data.error || '');
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'Analysis failed');
+      if (!response?.ok) {
+        throw new Error(response?.error || 'Analysis failed');
       }
 
       // Cache and show results
       console.log('[quantify] Got results, displaying...');
-      resultsCache.set(cacheKey, data.data);
-      showResults(tweet, data.data);
+      resultsCache.set(cacheKey, response.data);
+      showResults(tweet, response.data);
     } catch (err) {
       console.error('[quantify] Error:', err);
-      showError(tweet, err.message);
+      if (err.message === 'API_KEY_MISSING') {
+        showError(tweet, 'Please add your Anthropic API key in Quantify settings.');
+        try { chrome.runtime.sendMessage({ type: 'open-options' }); } catch {}
+      } else {
+        showError(tweet, err.message);
+      }
     } finally {
       button.classList.remove('quantify-loading');
       button.disabled = false;
@@ -247,21 +247,18 @@
     console.log('[quantify] Drafting tweet from analysis...');
 
     try {
-      const response = await fetch(`${API_URL}/rewrite-tweet`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ analysis, tweet_text: tweetText }),
+      const response = await chrome.runtime.sendMessage({
+        type: 'rewrite-tweet',
+        analysis,
+        tweetText,
       });
 
-      const data = await response.json();
-      console.log('[quantify] Rewrite response:', data);
-
-      if (!response.ok || !data.ok) {
-        throw new Error(data.error || 'Rewrite failed');
+      if (!response?.ok) {
+        throw new Error(response?.error || 'Rewrite failed');
       }
 
       // Insert into Twitter's compose box
-      const composed = data.data;
+      const composed = response.data;
       console.log('[quantify] Drafted tweet:', composed);
 
       const composeBox = document.querySelector('[data-testid="tweetTextarea_0"]');
@@ -302,6 +299,22 @@
       <div class="quantify-note-body">${escapeHtml(message)}</div>
     `;
 
+    if (message.includes('Anthropic API key')) {
+      const body = noteBox.querySelector('.quantify-note-body');
+      const ctaWrap = document.createElement('div');
+      ctaWrap.style.marginTop = '10px';
+      const cta = document.createElement('button');
+      cta.className = 'quantify-draft-tweet-button';
+      cta.textContent = 'Open Settings';
+      cta.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        chrome.runtime.openOptionsPage();
+      });
+      ctaWrap.appendChild(cta);
+      body.appendChild(ctaWrap);
+    }
+
     noteBox.querySelector('.quantify-note-close').addEventListener('click', (e) => {
       e.stopPropagation();
       noteBox.remove();
@@ -319,14 +332,15 @@
    * Format markdown-ish content to HTML
    */
   function formatContent(text) {
-    // Simple markdown-like formatting
-    return text
+    // Escape HTML first to prevent XSS, then apply markdown transforms
+    let safe = escapeHtml(text);
+    return safe
       // Bold
       .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
       // Italic
       .replace(/\*(.+?)\*/g, '<em>$1</em>')
-      // Links: [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
+      // Links: [text](url) — only allow http/https URLs
+      .replace(/\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g, '<a href="$2">$1</a>')
       // Line breaks
       .replace(/\n/g, '<br>');
   }

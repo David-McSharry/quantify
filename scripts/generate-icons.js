@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Generate simple PNG icons for the Market Finder extension.
+ * Generate simple PNG icons for the Quantify extension.
  * Uses only Node.js built-ins (no external dependencies).
  *
  * Creates a simple "chart trending up" icon in blue on transparent background.

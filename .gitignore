@@ -1,12 +1,5 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-build/
+# Build output
 dist/
-*.egg-info/
-*.egg
 
 # Virtual environments
 .venv/
@@ -18,12 +11,6 @@ dist/
 *.swp
 *.swo
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-
 # Claude Code local settings
 .claude/
 
@@ -33,18 +20,23 @@ htmlcov/
 # Debug files
 debug-*.html
 
-# Dev-only test script
+# Dev-only test scripts
 test-extension.mjs
+test-pipeline.mjs
 
 # Node
 node_modules/
 package-lock.json
 
+# Dev-only package.json (puppeteer test deps)
+package.json
+
 # Plans
 product_plan.md
 
-# Dev-only package.json (puppeteer test deps)
-package.json
+# Legacy directories (removed, prevent re-addition)
+backend/
+mcp-predictive-market/
 
 # Claude Code project context
 CLAUDE.md

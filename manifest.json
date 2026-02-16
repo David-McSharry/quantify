@@ -11,7 +11,13 @@
   ],
   "host_permissions": [
     "*://twitter.com/*",
-    "*://x.com/*"
+    "*://x.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.manifold.markets/*",
+    "https://gamma-api.polymarket.com/*",
+    "https://api.elections.kalshi.com/*",
+    "https://www.metaculus.com/*",
+    "https://r.jina.ai/*"
   ],
   "content_scripts": [
     {
@@ -46,7 +52,7 @@
     "analyze-page": {
       "suggested_key": {
         "default": "Ctrl+Shift+Q",
-        "mac": "Command+Shift+Q"
+        "mac": "Command+Shift+Y"
       },
       "description": "Analyze current page for prediction markets"
     }

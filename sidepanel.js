@@ -112,7 +112,12 @@ async function runAnalysis(url) {
     showState('results');
   } catch (err) {
     if (signal.aborted) return;
-    errorMessage.textContent = err.message || 'An unknown error occurred.';
+    if (err.message === 'API_KEY_MISSING') {
+      errorMessage.textContent = 'Please add your Anthropic API key in settings. Opening now...';
+      chrome.runtime.openOptionsPage();
+    } else {
+      errorMessage.textContent = err.message || 'An unknown error occurred.';
+    }
     showState('error');
   } finally {
     if (inflightController?.signal === signal) inflightController = null;

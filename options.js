@@ -1,10 +1,38 @@
-const urlInput = document.getElementById('gateway-url');
+import { loadSettings, saveSettings, testConnection } from './lib/gateway.js';
+
+const keyInput = document.getElementById('anthropic-key');
+const modelSelect = document.getElementById('anthropic-model');
+const customModelInput = document.getElementById('anthropic-model-custom');
 const saveBtn = document.getElementById('save-btn');
 const testBtn = document.getElementById('test-btn');
 const statusEl = document.getElementById('status');
 
-const DEFAULT_URL = 'http://127.0.0.1:18800';
+const DEFAULT_MODEL = 'claude-opus-4-6';
 let statusTimer = null;
+
+function getSelectedModel() {
+  if (modelSelect.value === 'custom') {
+    return customModelInput.value.trim();
+  }
+  return modelSelect.value;
+}
+
+function updateCustomModelVisibility() {
+  const show = modelSelect.value === 'custom';
+  customModelInput.style.display = show ? 'block' : 'none';
+}
+
+function setModelValue(modelId) {
+  const optionValues = Array.from(modelSelect.options).map((opt) => opt.value);
+  if (optionValues.includes(modelId)) {
+    modelSelect.value = modelId;
+    customModelInput.value = '';
+  } else {
+    modelSelect.value = 'custom';
+    customModelInput.value = modelId || '';
+  }
+  updateCustomModelVisibility();
+}
 
 function showStatus(message, type) {
   if (statusTimer) clearTimeout(statusTimer);
@@ -15,30 +43,43 @@ function showStatus(message, type) {
   }
 }
 
-chrome.storage.local.get(['proxyUrl'], (result) => {
-  urlInput.value = result.proxyUrl || DEFAULT_URL;
+loadSettings().then((settings) => {
+  keyInput.value = settings.anthropicApiKey || '';
+  setModelValue(settings.anthropicModel || DEFAULT_MODEL);
+  if (!settings.anthropicApiKey) {
+    showStatus('Add your Anthropic API key to start using Quantify.', 'info');
+    keyInput.focus();
+  }
 });
 
-saveBtn.addEventListener('click', () => {
-  const url = urlInput.value.trim();
-  if (!url) { showStatus('URL is required.', 'error'); return; }
-  chrome.storage.local.set({ proxyUrl: url }, () => {
-    showStatus('Saved.', 'success');
-  });
+saveBtn.addEventListener('click', async () => {
+  const anthropicApiKey = keyInput.value.trim();
+  const anthropicModel = getSelectedModel() || DEFAULT_MODEL;
+  if (!anthropicApiKey) {
+    showStatus('Anthropic API key is required.', 'error');
+    return;
+  }
+  if (!anthropicModel) {
+    showStatus('Anthropic model is required.', 'error');
+    return;
+  }
+  await saveSettings({ anthropicApiKey, anthropicModel });
+  showStatus('Saved.', 'success');
 });
 
-testBtn.addEventListener('click', () => {
+testBtn.addEventListener('click', async () => {
   showStatus('Testing...', 'info');
   testBtn.disabled = true;
-  chrome.runtime.sendMessage({ type: 'test-connection' }, (response) => {
-    testBtn.disabled = false;
-    if (chrome.runtime.lastError) {
-      showStatus(`Failed: ${chrome.runtime.lastError.message}`, 'error');
-      return;
-    }
-    if (response?.ok) showStatus('Connected!', 'success');
-    else showStatus(`Failed: ${response?.message || 'unreachable'}`, 'error');
-  });
+  const response = await testConnection();
+  testBtn.disabled = false;
+  if (response?.ok) showStatus('Connected!', 'success');
+  else showStatus(`Failed: ${response?.message || 'unreachable'}`, 'error');
 });
 
-urlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') saveBtn.click(); });
+modelSelect.addEventListener('change', updateCustomModelVisibility);
+
+for (const el of [keyInput, customModelInput]) {
+  el.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') saveBtn.click();
+  });
+}

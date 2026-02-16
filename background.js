@@ -1,4 +1,4 @@
-import { testConnection } from './lib/gateway.js';
+import { testConnection, analyzeText, rewriteTweet } from './lib/gateway.js';
 
 async function analyzeCurrentTab(tab) {
   if (!tab?.url || tab.url.startsWith('chrome://') || tab.url.startsWith('chrome-extension://')) return;
@@ -23,6 +23,25 @@ chrome.commands.onCommand.addListener(async (command) => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'test-connection') {
     testConnection().then(sendResponse);
+    return true;
+  }
+
+  if (message.type === 'open-options') {
+    chrome.runtime.openOptionsPage();
+    return false;
+  }
+
+  if (message.type === 'analyze-tweet') {
+    analyzeText(message.text)
+      .then((data) => sendResponse({ ok: true, data }))
+      .catch((err) => sendResponse({ ok: false, error: err.message }));
+    return true;
+  }
+
+  if (message.type === 'rewrite-tweet') {
+    rewriteTweet(message.analysis, message.tweetText || '')
+      .then((data) => sendResponse({ ok: true, data }))
+      .catch((err) => sendResponse({ ok: false, error: err.message }));
     return true;
   }
 });
