@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quantify - Privacy Policy</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 680px;
+      margin: 40px auto;
+      padding: 0 20px;
+      line-height: 1.6;
+      color: #1a1a1a;
+    }
+    h1 { font-size: 1.6em; margin-bottom: 0.3em; }
+    h2 { font-size: 1.2em; margin-top: 1.5em; }
+    p, li { font-size: 0.95em; }
+    ul { padding-left: 1.5em; }
+    .updated { color: #666; font-size: 0.85em; }
+  </style>
+</head>
+<body>
+  <h1>Quantify - Privacy Policy</h1>
+  <p class="updated">Last updated: February 16, 2026</p>
+
+  <h2>What Quantify Does</h2>
+  <p>Quantify is a Chrome extension that finds prediction markets relevant to the content you're reading. It works on X/Twitter tweets and any webpage.</p>
+
+  <h2>Data Collection</h2>
+  <p>Quantify does <strong>not</strong> collect, store, or transmit any personal data to its developers. There are no analytics, no tracking, no accounts, and no servers operated by Quantify.</p>
+
+  <h2>What Data Is Processed</h2>
+  <p>When you activate Quantify on a page or tweet, the following happens locally and via third-party APIs:</p>
+  <ul>
+    <li><strong>Tweet or page text</strong> is sent to the <a href="https://www.anthropic.com/">Anthropic API</a> using your own API key for query generation and relevance filtering.</li>
+    <li><strong>Search queries</strong> (short keywords extracted from the content) are sent to public prediction market APIs:
+      <a href="https://manifold.markets/">Manifold</a>,
+      <a href="https://polymarket.com/">Polymarket</a>,
+      <a href="https://kalshi.com/">Kalshi</a>, and
+      <a href="https://www.metaculus.com/">Metaculus</a>.</li>
+    <li><strong>Your Anthropic API key</strong> is stored locally in Chrome extension storage on your device. It is only sent to the Anthropic API and is never transmitted anywhere else.</li>
+  </ul>
+
+  <h2>Data Storage</h2>
+  <p>All data is stored locally on your device using Chrome's built-in extension storage (<code>chrome.storage.local</code>). This includes:</p>
+  <ul>
+    <li>Your Anthropic API key</li>
+    <li>Your selected model preference</li>
+  </ul>
+  <p>No data is stored on any remote server. Uninstalling the extension removes all stored data.</p>
+
+  <h2>Third-Party Services</h2>
+  <p>Quantify sends requests to the following third-party APIs when you activate it. Each service has its own privacy policy:</p>
+  <ul>
+    <li><a href="https://www.anthropic.com/privacy">Anthropic</a> - LLM API for relevance filtering</li>
+    <li><a href="https://manifold.markets/">Manifold Markets</a> - Public prediction market API</li>
+    <li><a href="https://polymarket.com/">Polymarket</a> - Public prediction market API</li>
+    <li><a href="https://kalshi.com/">Kalshi</a> - Public prediction market API</li>
+    <li><a href="https://www.metaculus.com/">Metaculus</a> - Public prediction market API</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <p>The extension requests the following permissions, each with a specific purpose:</p>
+  <ul>
+    <li><strong>activeTab</strong> - Read the current page content when you click the extension icon</li>
+    <li><strong>sidePanel</strong> - Display market results in a side panel</li>
+    <li><strong>storage</strong> - Store your API key and preferences locally</li>
+    <li><strong>scripting</strong> - Inject the Q button on X/Twitter pages</li>
+    <li><strong>Host permissions</strong> - Make API calls to market platforms and Anthropic</li>
+  </ul>
+
+  <h2>Changes to This Policy</h2>
+  <p>If this policy changes, the updated version will be posted at this URL. The extension itself does not auto-update its privacy practices without a new version release.</p>
+
+  <h2>Contact</h2>
+  <p>For questions about this privacy policy, open an issue on <a href="https://github.com/David-McSharry/quantify">GitHub</a>.</p>
+</body>
+</html>

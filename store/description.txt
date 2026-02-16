@@ -1,0 +1,25 @@
+See prediction market probabilities for the content you're reading.
+
+Quantify adds prediction market context to tweets and webpages. Click the Q button on any tweet or open the side panel on any page to see what the markets say.
+
+HOW IT WORKS
+1. Extracts key topics from the tweet or page
+2. Searches Manifold, Polymarket, Kalshi, and Metaculus for relevant markets
+3. Uses Claude to filter out irrelevant results
+4. Shows the most relevant markets with live probabilities and direct links
+
+FEATURES
+- One-click market context on X/Twitter tweets
+- Side panel analysis for any webpage
+- Searches 4 major prediction market platforms
+- Strict relevance filtering (no stretched connections)
+- Keyboard shortcut: Ctrl+Shift+Q (Windows/Linux) or Cmd+Shift+Y (Mac)
+
+BRING YOUR OWN KEY
+Quantify uses the Anthropic API for relevance filtering. You provide your own API key (get one at console.anthropic.com). Your key is stored locally and never sent anywhere except the Anthropic API.
+
+PRIVACY
+- No data collection, analytics, or tracking
+- No accounts or servers
+- Your API key stays on your device
+- All processing happens in the extension
