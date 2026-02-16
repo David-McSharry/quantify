@@ -444,56 +444,32 @@ function generateScreenshot() {
   // Background: dark blue-gray
   fillRect(buf, W, 0, 0, W, H, 17, 24, 39);
 
-  // Accent gradient band at top
-  for (let y = 0; y < 6; y++) {
-    fillRect(buf, W, 0, y, W, 1, 59, 130, 246);
-  }
+  // Accent line at top
+  fillRect(buf, W, 0, 0, W, 6, 59, 130, 246);
 
-  // Main card
-  fillRoundedRect(buf, W, 120, 100, 1040, 600, 16, 30, 41, 59);
+  // "Q" logo
+  const logoSize = 90;
+  const logoX = Math.round((W - logoSize) / 2);
+  fillRoundedRect(buf, W, logoX, 140, logoSize, logoSize, 14, 59, 130, 246);
+  drawText(buf, W, 'Q', logoX + 18, 155, 9, 255, 255, 255);
 
-  // "Q" logo mark
-  fillRoundedRect(buf, W, 180, 160, 80, 80, 12, 59, 130, 246);
-  drawText(buf, W, 'Q', 200, 175, 7, 255, 255, 255);
+  // Title: QUANTIFY
+  const titleScale = 10;
+  const titleW = measureText('QUANTIFY', titleScale);
+  drawText(buf, W, 'QUANTIFY', Math.round((W - titleW) / 2), 270, titleScale, 255, 255, 255);
 
-  // Title
-  drawText(buf, W, 'QUANTIFY', 290, 175, 7, 255, 255, 255);
+  // Tagline: WHAT YOU READ
+  const tagScale = 4;
+  const tagW = measureText('WHAT YOU READ', tagScale);
+  drawText(buf, W, 'WHAT YOU READ', Math.round((W - tagW) / 2), 360, tagScale, 160, 174, 192);
 
-  // Subtitle
-  drawText(buf, W, 'PREDICTION MARKETS FOR WHAT', 290, 240, 3, 160, 174, 192);
-  drawText(buf, W, 'YOU ARE READING', 290, 268, 3, 160, 174, 192);
+  // Chart
+  drawChart(buf, W, 200, 440, 880, 200, 59, 130, 246);
 
-  // Divider
-  fillRect(buf, W, 180, 310, 920, 1, 55, 65, 81);
-
-  // Market examples
-  const markets = [
-    { title: 'COVID LAB LEAK', platform: 'MANIFOLD', pct: '44%' },
-    { title: 'FED RATE CUT', platform: 'POLYMARKET', pct: '67%' },
-    { title: 'BITCOIN HITS 200K', platform: 'KALSHI', pct: '23%' },
-  ];
-
-  let my = 340;
-  for (const m of markets) {
-    // Probability pill
-    fillRoundedRect(buf, W, 200, my, 90, 40, 8, 59, 130, 246);
-    const pctW = measureText(m.pct, 3);
-    drawText(buf, W, m.pct, 200 + 45 - Math.round(pctW / 2), my + 10, 3, 255, 255, 255);
-
-    // Market title
-    drawText(buf, W, m.title, 310, my + 4, 4, 230, 237, 243);
-
-    // Platform label
-    drawText(buf, W, m.platform, 310, my + 32, 2, 107, 114, 128);
-
-    my += 70;
-  }
-
-  // Chart in bottom-right area
-  drawChart(buf, W, 700, 360, 400, 200, 59, 130, 246);
-
-  // Footer text
-  drawText(buf, W, 'BYOK  .  MANIFOLD  .  POLYMARKET  .  KALSHI  .  METACULUS', 240, 630, 2, 107, 114, 128);
+  // Footer
+  const footScale = 2;
+  const footW = measureText('CHROME EXTENSION', footScale);
+  drawText(buf, W, 'CHROME EXTENSION', Math.round((W - footW) / 2), 710, footScale, 107, 114, 128);
 
   return createPNG(W, H, buf);
 }
