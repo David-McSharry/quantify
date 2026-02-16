@@ -37,7 +37,7 @@ https://chrome.google.com/webstore/devconsole
 
 - **Language**: English
 - **Description**: Copy from `store/description.txt`
-- **Category**: Productivity (or "News & Weather")
+- **Category**: Social & Communication
 - **Icon**: Already in the zip via manifest.json (128x128)
 - **Screenshots**: Upload `store/screenshot-1280x800.png`
   - ALSO take a real screenshot of the extension working on a tweet (1280x800 or 640x400)
