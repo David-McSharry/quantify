@@ -12,6 +12,16 @@
   /** Cache of results by tweet text hash */
   const resultsCache = new Map();
 
+  /** Currently active progress element (set during analysis) */
+  let activeProgressEl = null;
+
+  // Listen for progress updates from the background service worker
+  chrome.runtime.onMessage.addListener((message) => {
+    if (message.type === 'quantify-progress' && activeProgressEl) {
+      activeProgressEl.textContent = message.message;
+    }
+  });
+
   function hashText(text) {
     let hash = 0;
     for (let i = 0; i < text.length; i++) {
@@ -63,35 +73,99 @@
   }
 
   /**
+   * Extract text + metadata from a single tweet article element.
+   */
+  function extractTweetContent(tweetEl) {
+    let text = '';
+    const tweetTextEl = tweetEl.querySelector('[data-testid="tweetText"]');
+    if (tweetTextEl) text = tweetTextEl.innerText.trim();
+
+    if (!text) {
+      const cardTitle = tweetEl.querySelector('[data-testid="card.layoutLarge.detail"] span, [data-testid="card.layoutSmall.detail"] span');
+      if (cardTitle) text = cardTitle.innerText.trim();
+    }
+    if (!text) {
+      const cardLink = tweetEl.querySelector('a[href*="t.co"] span');
+      if (cardLink) text = cardLink.innerText.trim();
+    }
+
+    // Author: User-Name contains display name + @handle
+    const userNameEl = tweetEl.querySelector('[data-testid="User-Name"]');
+    const author = userNameEl ? userNameEl.innerText.replace(/\n/g, ' ').trim() : '';
+
+    // Timestamp
+    const timeEl = tweetEl.querySelector('time');
+    const timestamp = timeEl ? timeEl.getAttribute('datetime') : '';
+
+    // Engagement metrics from the action bar aria-labels
+    const metrics = {};
+    for (const btn of tweetEl.querySelectorAll('[role="group"] button[aria-label]')) {
+      const label = btn.getAttribute('aria-label') || '';
+      // Labels like "123 Likes", "45 Reposts", "12 Replies", "67 Bookmarks"
+      const match = label.match(/^(\d[\d,]*)\s+(repl|like|repost|bookmark|view)/i);
+      if (match) {
+        const key = match[2].toLowerCase().replace(/^repl.*/, 'replies').replace(/^like.*/, 'likes').replace(/^repost.*/, 'reposts').replace(/^bookmark.*/, 'bookmarks').replace(/^view.*/, 'views');
+        metrics[key] = match[1].replace(/,/g, '');
+      }
+    }
+
+    // Quoted tweet
+    const quotedEl = tweetEl.querySelector('[data-testid="quoteTweet"]');
+    let quotedText = '';
+    if (quotedEl) {
+      const qtText = quotedEl.querySelector('[data-testid="tweetText"]');
+      const qtUser = quotedEl.querySelector('[data-testid="User-Name"]');
+      if (qtText) {
+        quotedText = (qtUser ? qtUser.innerText.replace(/\n/g, ' ').trim() + ': ' : '') + qtText.innerText.trim();
+      }
+    }
+
+    return { text, author, timestamp, metrics, quotedText };
+  }
+
+  /**
+   * Format a tweet summary for context.
+   */
+  function formatTweetSummary(info) {
+    let line = '';
+    if (info.author) line += info.author + ': ';
+    line += info.text;
+    return line;
+  }
+
+  /**
+   * Gather thread context: parent tweets above and visible replies below.
+   */
+  function gatherThreadContext(targetTweet) {
+    const allTweets = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+    const targetIdx = allTweets.indexOf(targetTweet);
+    if (targetIdx === -1) return { before: [], after: [] };
+
+    const before = [];
+    const after = [];
+
+    // Grab up to 5 tweets before (thread parents / conversation)
+    for (let i = Math.max(0, targetIdx - 5); i < targetIdx; i++) {
+      const info = extractTweetContent(allTweets[i]);
+      if (info.text) before.push(formatTweetSummary(info));
+    }
+
+    // Grab up to 5 tweets after (replies)
+    for (let i = targetIdx + 1; i < Math.min(allTweets.length, targetIdx + 6); i++) {
+      const info = extractTweetContent(allTweets[i]);
+      if (info.text) after.push(formatTweetSummary(info));
+    }
+
+    return { before, after };
+  }
+
+  /**
    * Handle click on the Quantify button
    */
   async function handleButtonClick(tweet, button) {
-    // Extract tweet text - try multiple sources
-    let tweetText = '';
+    const main = extractTweetContent(tweet);
 
-    // 1. Try the main tweet text element
-    const tweetTextEl = tweet.querySelector('[data-testid="tweetText"]');
-    if (tweetTextEl) {
-      tweetText = tweetTextEl.innerText.trim();
-    }
-
-    // 2. If no text, try to get card title/description (for link-only tweets)
-    if (!tweetText) {
-      const cardTitle = tweet.querySelector('[data-testid="card.layoutLarge.detail"] span, [data-testid="card.layoutSmall.detail"] span');
-      if (cardTitle) {
-        tweetText = cardTitle.innerText.trim();
-      }
-    }
-
-    // 3. Try any link card text
-    if (!tweetText) {
-      const cardLink = tweet.querySelector('a[href*="t.co"] span');
-      if (cardLink) {
-        tweetText = cardLink.innerText.trim();
-      }
-    }
-
-    // 4. Extract image URLs from the tweet
+    // Extract image URLs from the tweet
     const imageUrls = [];
     for (const img of tweet.querySelectorAll('[data-testid="tweetPhoto"] img')) {
       const src = img.src;
@@ -100,35 +174,64 @@
       }
     }
 
-    // 5. Extract link card URLs (article attachments)
+    // Extract link card URLs with domain info
     const linkUrls = [];
     for (const link of tweet.querySelectorAll('a[href*="t.co"]')) {
       const href = link.href;
       if (href && !linkUrls.includes(href)) {
-        // Get the card title if available
         const cardText = link.querySelector('[data-testid="card.layoutSmall.detail"], [data-testid="card.layoutLarge.detail"]');
         const label = cardText ? cardText.innerText.trim() : '';
         linkUrls.push(label ? `${href} (${label})` : href);
       }
     }
 
-    if (!tweetText && imageUrls.length === 0 && linkUrls.length === 0) {
+    if (!main.text && imageUrls.length === 0 && linkUrls.length === 0) {
       console.log('[quantify] No tweet content found');
       showError(tweet, 'No content found in this tweet');
       return;
     }
 
-    // Append image URLs to the text for analysis
+    // Build full context string
+    let tweetText = '';
+    const { before, after } = gatherThreadContext(tweet);
+
+    if (before.length > 0) {
+      tweetText += '[Thread context (earlier tweets):\n' + before.join('\n') + ']\n\n';
+    }
+
+    // Target tweet with metadata
+    tweetText += '[TARGET TWEET]';
+    if (main.author) tweetText += '\nAuthor: ' + main.author;
+    if (main.timestamp) tweetText += '\nPosted: ' + main.timestamp;
+    tweetText += '\n' + main.text;
+
+    // Engagement signals
+    const metricParts = [];
+    if (main.metrics.likes) metricParts.push(main.metrics.likes + ' likes');
+    if (main.metrics.reposts) metricParts.push(main.metrics.reposts + ' reposts');
+    if (main.metrics.replies) metricParts.push(main.metrics.replies + ' replies');
+    if (main.metrics.views) metricParts.push(main.metrics.views + ' views');
+    if (metricParts.length > 0) {
+      tweetText += '\nEngagement: ' + metricParts.join(', ');
+    }
+
+    // Quoted tweet
+    if (main.quotedText) {
+      tweetText += '\n\n[Quoting: ' + main.quotedText + ']';
+    }
+
     if (imageUrls.length > 0) {
-      tweetText += '\n\n[Images attached to this tweet:\n' + imageUrls.join('\n') + ']';
+      tweetText += '\n\n[Images attached:\n' + imageUrls.join('\n') + ']';
     }
-
-    // Append link URLs to the text for analysis
     if (linkUrls.length > 0) {
-      tweetText += '\n\n[Links attached to this tweet:\n' + linkUrls.join('\n') + ']';
+      tweetText += '\n\n[Links attached:\n' + linkUrls.join('\n') + ']';
     }
 
-    console.log('[quantify] Extracted tweet text:', tweetText);
+    if (after.length > 0) {
+      tweetText += '\n\n[Replies and discussion:\n' + after.join('\n') + ']';
+    }
+
+    console.log('[quantify] Extracted context:', tweetText);
 
     // Check cache
     const cacheKey = hashText(tweetText);
@@ -138,18 +241,38 @@
       return;
     }
 
-    // Show loading state
+    // Show loading state with progress indicator
     button.classList.add('quantify-loading');
     button.disabled = true;
+
+    const progressEl = document.createElement('div');
+    progressEl.className = 'quantify-progress';
+    progressEl.textContent = 'Analyzing content...';
+    const tweetTextEl = tweet.querySelector('[data-testid="tweetText"]');
+    if (tweetTextEl && tweetTextEl.parentElement) {
+      tweetTextEl.parentElement.insertAdjacentElement('afterend', progressEl);
+    } else {
+      tweet.appendChild(progressEl);
+    }
+    activeProgressEl = progressEl;
 
     console.log('[quantify] Sending to extension agent...');
     try {
       if (!chrome.runtime?.id) {
         throw new Error('Extension was updated. Please refresh the page.');
       }
+      // Extract raw t.co URLs for article pre-fetching
+      const rawLinkUrls = [];
+      for (const link of tweet.querySelectorAll('a[href*="t.co"]')) {
+        if (link.href && !rawLinkUrls.includes(link.href)) {
+          rawLinkUrls.push(link.href);
+        }
+      }
+
       const response = await chrome.runtime.sendMessage({
         type: 'analyze-tweet',
         text: tweetText,
+        linkUrls: rawLinkUrls,
       });
 
       if (!response?.ok) {
@@ -171,6 +294,8 @@
     } finally {
       button.classList.remove('quantify-loading');
       button.disabled = false;
+      progressEl.remove();
+      activeProgressEl = null;
     }
   }
 

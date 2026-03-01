@@ -7,34 +7,49 @@
   <link rel="stylesheet" href="sidepanel.css">
 </head>
 <body>
-  <main>
-    <div id="state-idle" class="state">
-      <div class="empty-state">
-        <p>Click the extension icon on any page to find related prediction markets.</p>
+  <div id="scroll-area">
+    <main>
+      <div id="state-idle" class="state">
+        <div class="empty-state">
+          <p>Click the extension icon on any page to find related prediction markets.</p>
+        </div>
       </div>
-    </div>
 
-    <div id="state-loading" class="state hidden">
-      <div class="loading">
+      <div id="state-loading" class="state hidden">
+        <div class="loading">
+          <div class="spinner"></div>
+          <p id="loading-status">Fetching...</p>
+          <p class="url-display" id="loading-url"></p>
+        </div>
+      </div>
+
+      <div id="state-results" class="state hidden">
+        <p class="url-display" id="results-url"></p>
+        <div id="response-text"></div>
+      </div>
+
+      <div id="state-error" class="state hidden">
+        <div class="error-box">
+          <p class="error-title">Something went wrong</p>
+          <p class="error-message" id="error-message"></p>
+          <button id="retry-btn">Retry</button>
+        </div>
+      </div>
+    </main>
+
+    <div id="ask-panel" class="hidden">
+      <div id="ask-response"></div>
+      <div id="ask-loading" class="hidden">
         <div class="spinner"></div>
-        <p>Fetching...</p>
-        <p class="url-display" id="loading-url"></p>
+        <p>Researching...</p>
       </div>
     </div>
+  </div>
 
-    <div id="state-results" class="state hidden">
-      <p class="url-display" id="results-url"></p>
-      <div id="response-text"></div>
-    </div>
-
-    <div id="state-error" class="state hidden">
-      <div class="error-box">
-        <p class="error-title">Something went wrong</p>
-        <p class="error-message" id="error-message"></p>
-        <button id="retry-btn">Retry</button>
-      </div>
-    </div>
-  </main>
+  <div id="ask-bar" class="hidden">
+    <input type="text" id="ask-input" placeholder="Ask a follow-up question..." />
+    <button id="ask-btn">Ask</button>
+  </div>
 
   <script src="sidepanel.js" type="module"></script>
 </body>

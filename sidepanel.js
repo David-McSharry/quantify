@@ -1,4 +1,4 @@
-import { analyzeUrl } from './lib/gateway.js';
+import { analyzeUrl, askQuestion } from './lib/gateway.js';
 import { marked } from './lib/marked.esm.js';
 
 const stateIdle = document.getElementById('state-idle');
@@ -6,6 +6,7 @@ const stateLoading = document.getElementById('state-loading');
 const stateResults = document.getElementById('state-results');
 const stateError = document.getElementById('state-error');
 const loadingUrl = document.getElementById('loading-url');
+const loadingStatus = document.getElementById('loading-status');
 const resultsUrl = document.getElementById('results-url');
 const responseText = document.getElementById('response-text');
 const errorMessage = document.getElementById('error-message');
@@ -23,6 +24,10 @@ function showState(state) {
   stateLoading.classList.toggle('hidden', state !== 'loading');
   stateResults.classList.toggle('hidden', state !== 'results');
   stateError.classList.toggle('hidden', state !== 'error');
+  if (state !== 'results') {
+    document.getElementById('ask-bar').classList.add('hidden');
+    document.getElementById('ask-panel').classList.add('hidden');
+  }
 }
 
 function truncateUrl(url, maxLen = 50) {
@@ -61,13 +66,18 @@ async function runAnalysis(url) {
 
   lastUrl = url;
   loadingUrl.textContent = truncateUrl(url);
+  loadingStatus.textContent = 'Fetching...';
   showState('loading');
 
   try {
-    const result = await analyzeUrl(url, signal);
+    const onProgress = (p) => { loadingStatus.textContent = p.message; };
+    const result = await analyzeUrl(url, signal, onProgress);
     if (signal.aborted) return;
+    const text = typeof result === 'object' ? result.analysis : result;
+    const articleBody = typeof result === 'object' ? result.articleText : '';
+    // Store full context for follow-up questions
+    lastArticleText = `URL: ${url}\n\nArticle text:\n${articleBody}\n\nPrediction markets found:\n${text}`;
     resultsUrl.textContent = truncateUrl(url);
-    const text = typeof result === 'string' ? result : JSON.stringify(result, null, 2);
     responseText.innerHTML = marked.parse(text);
 
     // Open links in new tab so they don't navigate inside the side panel
@@ -110,6 +120,9 @@ async function runAnalysis(url) {
     }
 
     showState('results');
+    showAskBar(true);
+    askPanel.classList.add('hidden');
+    askResponse.innerHTML = '';
   } catch (err) {
     if (signal.aborted) return;
     if (err.message === 'API_KEY_MISSING') {
@@ -155,6 +168,59 @@ retryBtn.addEventListener('click', () => {
   if (lastUrl) {
     runAnalysis(lastUrl);
   }
+});
+
+// ─── Ask feature ─────────────────────────────────────────────
+
+const askBar = document.getElementById('ask-bar');
+const askPanel = document.getElementById('ask-panel');
+const askInput = document.getElementById('ask-input');
+const askBtn = document.getElementById('ask-btn');
+const askResponse = document.getElementById('ask-response');
+const askLoading = document.getElementById('ask-loading');
+let askController = null;
+let lastArticleText = null;
+
+function showAskBar(visible) {
+  askBar.classList.toggle('hidden', !visible);
+}
+
+async function handleAsk() {
+  const question = askInput.value.trim();
+  if (!question) return;
+
+  if (askController) askController.abort();
+  askController = new AbortController();
+  const { signal } = askController;
+
+  askBtn.disabled = true;
+  askPanel.classList.remove('hidden');
+  askLoading.classList.remove('hidden');
+  askResponse.innerHTML = '';
+
+  try {
+    const result = await askQuestion(question, lastArticleText, signal);
+    if (signal.aborted) return;
+    askResponse.innerHTML = marked.parse(result);
+    for (const a of askResponse.querySelectorAll('a')) {
+      a.target = '_blank';
+      a.rel = 'noopener';
+    }
+    askInput.value = '';
+  } catch (err) {
+    if (!signal.aborted) {
+      askResponse.innerHTML = `<p style="color: var(--error)">${err.message}</p>`;
+    }
+  } finally {
+    askBtn.disabled = false;
+    askLoading.classList.add('hidden');
+    if (askController?.signal === signal) askController = null;
+  }
+}
+
+askBtn.addEventListener('click', handleAsk);
+askInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') handleAsk();
 });
 
 showState('idle');

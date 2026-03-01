@@ -14,6 +14,8 @@ mkdir -p "$OUT_DIR/ext"
 FILES=(
   manifest.json
   background.js
+  popup.html
+  popup.js
   sidepanel.html
   sidepanel.js
   sidepanel.css
@@ -38,6 +40,9 @@ cp "$ROOT_DIR/lib/market-search.js" "$OUT_DIR/ext/lib/"
 
 mkdir -p "$OUT_DIR/ext/icons"
 cp "$ROOT_DIR/icons/"*.png "$OUT_DIR/ext/icons/"
+
+mkdir -p "$OUT_DIR/ext/prompts"
+cp "$ROOT_DIR/prompts/"*.md "$OUT_DIR/ext/prompts/"
 
 # Create ZIP
 cd "$OUT_DIR/ext"

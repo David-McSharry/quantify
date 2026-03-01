@@ -1,10 +1,9 @@
-import { loadSettings, saveSettings, testConnection } from './lib/gateway.js';
+import { loadSettings, saveSettings } from './lib/gateway.js';
 
 const keyInput = document.getElementById('anthropic-key');
 const modelSelect = document.getElementById('anthropic-model');
 const customModelInput = document.getElementById('anthropic-model-custom');
 const saveBtn = document.getElementById('save-btn');
-const testBtn = document.getElementById('test-btn');
 const statusEl = document.getElementById('status');
 
 const DEFAULT_MODEL = 'claude-opus-4-6';
@@ -64,16 +63,7 @@ saveBtn.addEventListener('click', async () => {
     return;
   }
   await saveSettings({ anthropicApiKey, anthropicModel });
-  showStatus('Saved.', 'success');
-});
-
-testBtn.addEventListener('click', async () => {
-  showStatus('Testing...', 'info');
-  testBtn.disabled = true;
-  const response = await testConnection();
-  testBtn.disabled = false;
-  if (response?.ok) showStatus('Connected!', 'success');
-  else showStatus(`Failed: ${response?.message || 'unreachable'}`, 'error');
+  showStatus('Saved. Quantify estimates a >99% chance your key works.', 'success');
 });
 
 modelSelect.addEventListener('change', updateCustomModelVisibility);

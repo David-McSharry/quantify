@@ -73,9 +73,7 @@ https://chrome.google.com/webstore/devconsole
 | `host_permissions: api.anthropic.com` | Send content to Anthropic API for relevance filtering (using user's own API key) |
 | `host_permissions: api.manifold.markets` | Search Manifold prediction markets |
 | `host_permissions: gamma-api.polymarket.com` | Search Polymarket prediction markets |
-| `host_permissions: api.elections.kalshi.com` | Search Kalshi prediction markets |
-| `host_permissions: www.metaculus.com` | Search Metaculus prediction markets |
-| `host_permissions: r.jina.ai` | Fallback article text extraction for side panel analysis |
+| `host_permissions: r.jina.ai` | Fallback article text extraction when direct fetch fails |
 
 ### 8. Submit for review
 

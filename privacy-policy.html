@@ -34,11 +34,10 @@
   <p>When you activate Quantify on a page or tweet, the following happens locally and via third-party APIs:</p>
   <ul>
     <li><strong>Tweet or page text</strong> is sent to the <a href="https://www.anthropic.com/">Anthropic API</a> using your own API key for query generation and relevance filtering.</li>
-    <li><strong>Search queries</strong> (short keywords extracted from the content) are sent to public prediction market APIs:
-      <a href="https://manifold.markets/">Manifold</a>,
-      <a href="https://polymarket.com/">Polymarket</a>,
-      <a href="https://kalshi.com/">Kalshi</a>, and
-      <a href="https://www.metaculus.com/">Metaculus</a>.</li>
+    <li><strong>Search queries</strong> are sent to public prediction market APIs:
+      <a href="https://manifold.markets/">Manifold</a> and
+      <a href="https://polymarket.com/">Polymarket</a>.</li>
+    <li><strong>Article text</strong> may be fetched via <a href="https://jina.ai/">Jina</a> (<code>r.jina.ai</code>) as a fallback when direct page fetch fails. Only the article URL is sent to Jina.</li>
     <li><strong>Your Anthropic API key</strong> is stored locally in Chrome extension storage on your device. It is only sent to the Anthropic API and is never transmitted anywhere else.</li>
   </ul>
 
@@ -53,11 +52,10 @@
   <h2>Third-Party Services</h2>
   <p>Quantify sends requests to the following third-party APIs when you activate it. Each service has its own privacy policy:</p>
   <ul>
-    <li><a href="https://www.anthropic.com/privacy">Anthropic</a> - LLM API for relevance filtering</li>
-    <li><a href="https://manifold.markets/">Manifold Markets</a> - Public prediction market API</li>
-    <li><a href="https://polymarket.com/">Polymarket</a> - Public prediction market API</li>
-    <li><a href="https://kalshi.com/">Kalshi</a> - Public prediction market API</li>
-    <li><a href="https://www.metaculus.com/">Metaculus</a> - Public prediction market API</li>
+    <li><a href="https://www.anthropic.com/privacy">Anthropic</a> — LLM API for content analysis and market search</li>
+    <li><a href="https://manifold.markets/">Manifold Markets</a> — Public prediction market search API</li>
+    <li><a href="https://polymarket.com/">Polymarket</a> — Public prediction market search API</li>
+    <li><a href="https://jina.ai/">Jina</a> — Fallback article text extraction (only used when direct fetch fails)</li>
   </ul>
 
   <h2>Permissions</h2>

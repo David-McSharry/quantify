@@ -7,7 +7,8 @@
     "activeTab",
     "sidePanel",
     "storage",
-    "scripting"
+    "scripting",
+    "contextMenus"
   ],
   "host_permissions": [
     "*://twitter.com/*",
@@ -15,8 +16,6 @@
     "https://api.anthropic.com/*",
     "https://api.manifold.markets/*",
     "https://gamma-api.polymarket.com/*",
-    "https://api.elections.kalshi.com/*",
-    "https://www.metaculus.com/*",
     "https://r.jina.ai/*"
   ],
   "content_scripts": [

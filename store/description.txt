@@ -4,16 +4,13 @@ ON TWITTER/X
 A "Q" button appears on every tweet. Click it to see prediction markets relevant to that tweet.
 
 ON ANY ARTICLE
-Click the Quantify icon in your toolbar to find prediction markets relevant to the page you're reading.
+Click the Quantify icon in your toolbar to find prediction markets relevant to the page you're reading. Ask follow-up questions in the bar at the bottom.
 
 HOW IT WORKS
-1. Extracts key topics from the tweet or article
-2. Searches Manifold, Polymarket, Kalshi, and Metaculus
-3. Uses Claude to filter for genuinely relevant markets
-4. Shows live probabilities with direct links
+An AI agent reads your content, searches Manifold and Polymarket, and iterates until it finds the most relevant markets. Typically 2-3 search rounds.
 
 BRING YOUR OWN KEY
-Quantify uses the Anthropic API for relevance filtering. You provide your own API key (get one at console.anthropic.com). Your key is stored locally and never sent anywhere except the Anthropic API.
+Quantify uses the Anthropic API (BYOK). You provide your own API key (get one at console.anthropic.com). Your key is stored locally and never sent anywhere except the Anthropic API.
 
 PRIVACY
 - No data collection, analytics, or tracking

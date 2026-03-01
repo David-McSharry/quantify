@@ -31,6 +31,14 @@ body {
   background: var(--bg);
   line-height: 1.5;
   min-width: 300px;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+#scroll-area {
+  flex: 1;
+  overflow-y: auto;
 }
 
 main { padding: 16px; }
@@ -159,6 +167,78 @@ em.quantify-sidebar-quote.quantify-sidebar-quote-active {
 }
 
 em.quantify-sidebar-quote-unmatched {
-  opacity: 0.5;
+  opacity: 0.85;
   cursor: default;
 }
+
+/* ─── Ask bar (fixed at bottom) ───────────────── */
+
+#ask-bar {
+  display: flex;
+  gap: 6px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  flex-shrink: 0;
+}
+
+#ask-input {
+  flex: 1;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 13px;
+  background: var(--bg-secondary);
+  color: var(--text);
+  outline: none;
+}
+
+#ask-input:focus {
+  border-color: var(--accent);
+}
+
+#ask-btn {
+  background: var(--accent);
+  color: #ffffff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+#ask-btn:hover { background: var(--accent-hover); }
+#ask-btn:disabled { opacity: 0.5; cursor: default; }
+
+/* ─── Ask panel (response area above the bar) ─── */
+
+#ask-panel {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+#ask-loading {
+  text-align: center;
+  padding: 12px 0;
+}
+
+#ask-loading .spinner {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 8px;
+}
+
+#ask-loading p {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+#ask-response a {
+  color: var(--accent);
+  text-decoration: none;
+}
+#ask-response a:hover { text-decoration: underline; }
